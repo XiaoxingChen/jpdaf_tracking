@@ -117,7 +117,8 @@ cv::VideoWriter output_cap("output.avi",
 		7,
                cv::Size(1536, 576));
   
-  for(uint i = 0; i < detections.size(); ++i)
+  // for(uint i = 0; i < detections.size(); ++i)
+  for(uint i = 0; i < 250; ++i)
   {
     
     rects.clear();
@@ -153,7 +154,14 @@ cv::VideoWriter output_cap("output.avi",
       
       ++j;
     }
-    
+    std::cout <<  std::endl;
+    std::cout << "[DetsNum]: " << dets.size() << std::endl;
+    std::cout << "[Dets]:";
+    for(const auto& d : dets)
+    {
+      std::cout << "(" << d.x() << "," << d.y() << ") ";
+    }
+    std::cout << std::endl;
     tracker->track(dets);
     tracker->drawTracks(trackingImg);
     const cv::Mat& m = mosaic(image, trackingImg);

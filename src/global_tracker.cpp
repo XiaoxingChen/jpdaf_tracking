@@ -46,10 +46,14 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections)
     not_associated_.clear();
     VecBool isAssoc(_detections.size(), false); //all the detections are not associated
     uint i;
+    std::cout << "[LocalTracker Size]: " << localTrackers_.size() << std::endl;
+    std::cout << "[LocalTrackers tracks num]: ";
     for(const auto& tracker : localTrackers_)
     {
       tracker->track(_detections, isAssoc, trackID_);
+      std::cout << tracker->tracks().size() << " ";
     }
+    std::cout << std::endl;
     i = 0;
     for(const auto& ass : isAssoc)
     {
@@ -73,13 +77,14 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections)
     }
     
     cv::Mat_<int> q(cv::Size(tracks_.size(), _detections.size()), int(0));
-    
+    std::cout << "[q dim][before associate]: (" << q.rows << " x " << q.cols << ") //detections x tracks" << std::endl; 
     std::vector<Eigen::Vector2f> selected_detections;
   
     //ASSOCIATION
     std::vector<bool> not_associate;
     associate(selected_detections, q, _detections);
     
+    std::cout << "[q dim][after associate]: (" << q.rows << " x " << q.cols << ") //detections x tracks" << std::endl; 
     if(q.total() > 0)
     {
       not_associate = analyze_tracks(q, _detections); //ASSIGN ALL THE NOT ASSOCIATED TRACKS
@@ -95,29 +100,29 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections)
       
       for(const auto& track : tracks_)
       {
-	if(not_associate.at(j))
-	{
-	  track->gainUpdate(last_beta_(i));
-	}
-	j++;
-	i++;
+        if(not_associate.at(j))
+        {
+          track->gainUpdate(last_beta_(i));
+        }
+        j++;
+        i++;
       }
-      
-      //UPDATE AND CORRECT
+        
+        //UPDATE AND CORRECT
       i = 0, j = 0;
       for(const auto& track : tracks_)
       {
-	if(not_associate.at(j))
-	{
-	  track->update(selected_detections, beta_.col(i), beta_(beta_.rows() - 1, i) );
-	}
-	++j;
-	++i;
+        if(not_associate.at(j))
+        {
+          track->update(selected_detections, beta_.col(i), beta_(beta_.rows() - 1, i) );
+        }
+        ++j;
+        ++i;
       }
     }
-    
-    manage_new_tracks(); 
-  }
+      
+     manage_new_tracks(); 
+    }
 }
 
 void GlobalTracker::delete_tracks()
@@ -242,7 +247,6 @@ void GlobalTracker::associate(std::vector< Eigen::Vector2f >& _selected_detectio
 			      const Eigen::Vector2f& tmp = _p1 - _p2; 
 			      return sqrt(tmp(0) * tmp(0) + tmp(1) * tmp(1));
 			    };
-  
   for(const auto& detection : _detections)
   {
     Eigen::Vector2f det;
@@ -279,6 +283,12 @@ void GlobalTracker::associate(std::vector< Eigen::Vector2f >& _selected_detectio
     }
     ++j;
   }
+  std::cout << "[selected dets]: " ;
+  for(const auto& i : _selected_detections)
+  {
+    std::cout << "(" << i.x() << "," << i.y() << ") ";
+  }
+  std::cout << std::endl;
   _q = _q(cv::Rect(0, 0, tracks_.size() + 1, validationIdx));
   ////////////////////////////////////////////////////////////////////////////
 }
