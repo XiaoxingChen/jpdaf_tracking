@@ -5,10 +5,12 @@ using namespace JPDAFTracker;
 void Tracker::drawTracks(cv::Mat &_img) const
 {
   std::stringstream ss;
+  std::cout << "[final tracks]: (" << tracks_.size() << ") ";
   for(const auto& track : tracks_)
   {
     if(track->getId() != -1)
     {
+      std::cout << "[" << track->getId() << "]";
       ss.str("");
       ss << track->getId();
       std::flush(ss);
@@ -19,6 +21,7 @@ void Tracker::drawTracks(cv::Mat &_img) const
 		0.50, cv::Scalar(0, 255, 0), 2, CV_AA);
     }
   }
+  std::cout << std::endl;
 }
 
 Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices,

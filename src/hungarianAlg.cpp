@@ -17,6 +17,7 @@ track_t AssignmentProblemSolver::Solve(
 	TMethod Method
 	)
 {
+	std::cout << "[Hungarian Solver] Called!" << std::endl;
 	assignment.resize(nOfRows, -1);
 
 	track_t cost = 0;

@@ -51,7 +51,16 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections)
     for(const auto& tracker : localTrackers_)
     {
       tracker->track(_detections, isAssoc, trackID_);
-      std::cout << tracker->tracks().size() << " ";
+      std::cout << "{" ;
+      for(const auto& track : tracker->tracks())
+      {
+        std::cout << "[" 
+        << track->getId() << "](" 
+        << track->getLastPrediction().x << "," 
+        << track->getLastPrediction().y << ")";
+      }
+      std::cout << "} " ;
+      // std::cout << tracker->tracks().size() << " ";
     }
     std::cout << std::endl;
     i = 0;
