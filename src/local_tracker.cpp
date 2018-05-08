@@ -12,6 +12,7 @@ LocalTracker::LocalTracker(const TrackerParam& _param)
 void LocalTracker::track(const std::vector< Detection >& _detections, VecBool& _isAssoc, uint& _trackID)
 {
   uint j = 0;
+  std::cout << "[LocalTracker::track]:[_trackID]" << _trackID << std::endl;
   for(auto& track : tracks_)
   {
     track->predict();
@@ -96,6 +97,7 @@ void LocalTracker::delete_tracks()
 void LocalTracker::associate(std::vector< Eigen::Vector2f >& _selected_detections, cv::Mat& _q, 
 			const std::vector< Detection >& _detections, VecBool& _isAssoc)
 {
+  std::cout << "[LocalTracker::associate]:" << std::endl;
   //Extracting the measurements inside the validation gate for all the tracks
   //Create a q matrix with a width = clutter + number of tracks
   _q = cv::Mat_<int>(cv::Size(tracks_.size() + 1, _detections.size()), int(0));

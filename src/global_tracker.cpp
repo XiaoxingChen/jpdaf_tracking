@@ -13,6 +13,7 @@ GlobalTracker::GlobalTracker(const TrackerParam& _param)
 
 void GlobalTracker::track(const GlobalTracker::Detections& _detections)
 {
+  std::cout << "[GlobalTracker::track]:" << std::endl;
   if(init_)
   {
     prev_detections_.clear();
@@ -46,11 +47,21 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections)
     not_associated_.clear();
     VecBool isAssoc(_detections.size(), false); //all the detections are not associated
     uint i;
-    std::cout << "[LocalTracker Size]: " << localTrackers_.size() << std::endl;
-    std::cout << "[LocalTrackers tracks num]: ";
+    
     for(const auto& tracker : localTrackers_)
     {
       tracker->track(_detections, isAssoc, trackID_);
+      std::cout << "[isAssoc]:";
+      for(const auto& ass : isAssoc)
+      {
+        std::cout << ass;
+      }
+      std::cout << std::endl;
+    }
+
+    std::cout << "[LocalTrackers]: ";
+    for(const auto& tracker : localTrackers_)
+    {
       std::cout << "{" ;
       for(const auto& track : tracker->tracks())
       {
@@ -60,9 +71,16 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections)
         << track->getLastPrediction().y << ")";
       }
       std::cout << "} " ;
-      // std::cout << tracker->tracks().size() << " ";
     }
+
     std::cout << std::endl;
+    // std::cout << "[isAssoc]:";
+    // for(const auto& ass : isAssoc)
+    // {
+    //   std::cout << ass;
+    // }
+    // std::cout << std::endl;
+
     i = 0;
     for(const auto& ass : isAssoc)
     {
@@ -86,14 +104,13 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections)
     }
     
     cv::Mat_<int> q(cv::Size(tracks_.size(), _detections.size()), int(0));
-    std::cout << "[q dim][before associate]: (" << q.rows << " x " << q.cols << ") //detections x tracks" << std::endl; 
     std::vector<Eigen::Vector2f> selected_detections;
   
     //ASSOCIATION
     std::vector<bool> not_associate;
     associate(selected_detections, q, _detections);
     
-    std::cout << "[q dim][after associate]: (" << q.rows << " x " << q.cols << ") //detections x tracks" << std::endl; 
+    std::cout << "[q dim][after g associate]: (" << q.rows << " x " << q.cols << ") //detections x tracks" << std::endl; 
     if(q.total() > 0)
     {
       not_associate = analyze_tracks(q, _detections); //ASSIGN ALL THE NOT ASSOCIATED TRACKS
@@ -176,9 +193,16 @@ void GlobalTracker::manage_new_tracks()
     {
       for(uint j = 0; j < deteSize; ++j)
       {
-	costs.at(i + j * prevDetSize ) = euclideanDist(not_associated_.at(j), prev_detections_.at(i));
-	costMat.at<float>(i, j) = costs.at(i + j * prevDetSize );
+	      costs.at(i + j * prevDetSize ) = euclideanDist(not_associated_.at(j), prev_detections_.at(i));
+	      costMat.at<float>(i, j) = costs.at(i + j * prevDetSize );
+        std::cout << "[cost]: ("
+        << costs.at(i + j * prevDetSize ) <<"); {("
+        << not_associated_.at(j).x() << ","
+        << not_associated_.at(j).y() << "),("
+        << prev_detections_.at(i).x() << ","
+        << prev_detections_.at(i).y() << ")}\t";
       }
+      std::cout << std::endl;
     }
     
     	  
@@ -186,7 +210,13 @@ void GlobalTracker::manage_new_tracks()
     APS.Solve(costs, prevDetSize, deteSize, assignments, AssignmentProblemSolver::optimal);
 
     const uint& assSize = assignments.size();
-    
+    std::cout << "[assignments]:" ;
+    for(const auto& a : assignments)
+    {
+      std::cout << a << " ";
+    }
+    std::cout << std::endl;
+
     for(uint i = 0; i < assSize; ++i)
     {
       if( assignments[i] != -1 && costMat.at<float>(i, assignments[i]) < param_.assocCost)
@@ -205,14 +235,14 @@ void GlobalTracker::manage_new_tracks()
     {
       for(uint j = 0; j < cols; ++j)
       {
-	if(assigmentsBin.at<int>(i, j))
-	{
-	  const float& vx = not_associated_.at(j).x() - prev_detections_.at(i).x();
-	  const float& vy = not_associated_.at(j).y() - prev_detections_.at(i).y();
-	  std::shared_ptr<Track> tr(new Track(param_.dt, param_.target_delta, not_associated_.at(j).x(), not_associated_.at(j).y(), 
-						vx, vy, param_.g_sigma, param_.gamma, param_.R ));
-	  tracker->push_back(tr);
-	}
+        if(assigmentsBin.at<int>(i, j))
+        {
+          const float& vx = not_associated_.at(j).x() - prev_detections_.at(i).x();
+          const float& vy = not_associated_.at(j).y() - prev_detections_.at(i).y();
+          std::shared_ptr<Track> tr(new Track(param_.dt, param_.target_delta, not_associated_.at(j).x(), not_associated_.at(j).y(), 
+                  vx, vy, param_.g_sigma, param_.gamma, param_.R ));
+          tracker->push_back(tr);
+        }
       }
     }
     if(tracker->size() > 0)
@@ -245,6 +275,7 @@ void GlobalTracker::manage_new_tracks()
 void GlobalTracker::associate(std::vector< Eigen::Vector2f >& _selected_detections, cv::Mat& _q, 
 			const std::vector< Detection >& _detections)
 {
+  std::cout << "[GlobalTracker::associate]: called" << std::endl;
   //Extracting the measurements inside the validation gate for all the tracks
   //Create a q matrix with a width = clutter + number of tracks
   _q = cv::Mat_<int>(cv::Size(tracks_.size() + 1, _detections.size()), int(0));
