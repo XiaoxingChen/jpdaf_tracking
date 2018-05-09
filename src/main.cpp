@@ -154,7 +154,7 @@ cv::VideoWriter output_cap("output.avi",
       
       ++j;
     }
-    std::cout <<  std::endl;
+    std::cout <<  std::endl << "******************" << std::endl;
     std::cout << "[DetsNum]: " << dets.size() << std::endl;
     std::cout << "[Dets]:";
     for(const auto& d : dets)

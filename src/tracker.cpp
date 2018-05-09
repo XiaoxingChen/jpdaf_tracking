@@ -10,7 +10,7 @@ void Tracker::drawTracks(cv::Mat &_img) const
   {
     if(track->getId() != -1)
     {
-      std::cout << "[" << track->getId() << "]";
+      
       ss.str("");
       ss << track->getId();
       std::flush(ss);
@@ -19,6 +19,9 @@ void Tracker::drawTracks(cv::Mat &_img) const
       //cv::ellipse(img, p, cv::Size(25, 50), 0, 0, 360, track->getColor(), 3);
       cv::putText(_img, ss.str(), p, cv::FONT_HERSHEY_SIMPLEX,
 		0.50, cv::Scalar(0, 255, 0), 2, CV_AA);
+    std::cout << "[" << track->getId() << "]("
+    << p.x << ","
+    << p.y << ")";
     }
   }
   std::cout << std::endl;
@@ -195,9 +198,11 @@ Tracker::Matrices Tracker::generate_hypothesis(const Vec2f& _selected_detections
     } // i
   } 
   /////////////////////////////////////////////////////////////////////////////////
+  std::cout << "[Tracker::generate_hypothesis][hyp_num]" << hyp_num << std::endl;
   Matrices association_matrices(hyp_num + 1);
   std::copy(tmp_association_matrices.begin(), tmp_association_matrices.begin() + hyp_num + 1, 
 	    association_matrices.begin());
+  std::cout << "[Tracker::generate_hypothesis][matrices size]" << association_matrices.size() << std::endl;
   return association_matrices;
 }
 

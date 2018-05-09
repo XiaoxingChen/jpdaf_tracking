@@ -13,6 +13,15 @@ void LocalTracker::track(const std::vector< Detection >& _detections, VecBool& _
 {
   uint j = 0;
   std::cout << "[LocalTracker::track]:[_trackID]" << _trackID << std::endl;
+  std::cout << "[LocalTracker::track]:[Trackers]  " ;
+  for(const auto& tra :tracks_)
+  {
+    std::cout << "[" 
+    << tra->getId() << "](" 
+    << tra->getLastPrediction().x << ","
+    << tra->getLastPrediction().y << ") ";
+  }
+  std::cout << std::endl;
   for(auto& track : tracks_)
   {
     track->predict();
@@ -30,6 +39,8 @@ void LocalTracker::track(const std::vector< Detection >& _detections, VecBool& _
   //ASSOCIATION
   std::vector<bool> not_associate;
   associate(selected_detections, q, _detections, _isAssoc);
+
+  std::cout << "[LocalTracker::track][q]: " << std::endl << q << " //tracks_.size() + 1, validationIdx" << std::endl; 
   
   //NO ASSOCIATIONS
   if(q.total() == 0)
@@ -47,8 +58,16 @@ void LocalTracker::track(const std::vector< Detection >& _detections, VecBool& _
     //HYPOTHESIS
     const Matrices& association_matrices = generate_hypothesis(selected_detections, q);
       
+    std::cout << "[LocalTracker::track]:[association_matrices]" << std::endl;
+    for (const auto& mat : association_matrices)
+    {
+      std::cout << "(" << mat.rows() << "," << mat.cols() << ")"<< std::endl;
+      std::cout << mat << std::endl;
+    }
+
     //COMPUTE JOINT PROBABILITY
     beta_ = joint_probability(association_matrices, selected_detections);
+    std::cout << "[LocalTracker::track]:[beta_]" << std::endl << beta_ << std::endl;
     last_beta_ = beta_.row(beta_.rows() - 1);
       
     //KALMAN PREDICT STEP
@@ -81,6 +100,15 @@ void LocalTracker::track(const std::vector< Detection >& _detections, VecBool& _
     }
   }
   delete_tracks();
+  std::cout << "[LocalTracker::track]:[Trackers]  " ;
+  for(const auto& tra :tracks_)
+  {
+    std::cout << "[" 
+    << tra->getId() << "](" 
+    << tra->getLastPrediction().x << ","
+    << tra->getLastPrediction().y << ") ";
+  }
+  std::cout << std::endl;
 }
 
 void LocalTracker::delete_tracks()
@@ -137,6 +165,9 @@ void LocalTracker::associate(std::vector< Eigen::Vector2f >& _selected_detection
 	_q.at<int>(validationIdx, 0) = 1;
 	_q.at<int>(validationIdx, i) = 1;
 	found = true;
+  std::cout << "[LocalTracker::associate][found]: detection[" 
+  << j << "] <-> track["
+  << track->getId() << "]" << std::endl;
       }
       ++i;
     }
@@ -152,6 +183,12 @@ void LocalTracker::associate(std::vector< Eigen::Vector2f >& _selected_detection
     }
     ++j;
   }
+  std::cout << "[LocalTracker::associate][selected dets]: " ;
+  for(const auto& i : _selected_detections)
+  {
+    std::cout << "(" << i.x() << "," << i.y() << ") ";
+  }
+  std::cout << std::endl;
   _q = _q(cv::Rect(0, 0, tracks_.size() + 1, validationIdx));
   ////////////////////////////////////////////////////////////////////////////
 }

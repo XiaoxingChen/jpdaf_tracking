@@ -59,28 +59,6 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections)
       std::cout << std::endl;
     }
 
-    std::cout << "[LocalTrackers]: ";
-    for(const auto& tracker : localTrackers_)
-    {
-      std::cout << "{" ;
-      for(const auto& track : tracker->tracks())
-      {
-        std::cout << "[" 
-        << track->getId() << "](" 
-        << track->getLastPrediction().x << "," 
-        << track->getLastPrediction().y << ")";
-      }
-      std::cout << "} " ;
-    }
-
-    std::cout << std::endl;
-    // std::cout << "[isAssoc]:";
-    // for(const auto& ass : isAssoc)
-    // {
-    //   std::cout << ass;
-    // }
-    // std::cout << std::endl;
-
     i = 0;
     for(const auto& ass : isAssoc)
     {
@@ -94,6 +72,8 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections)
     delete_tracks();
     
     tracks_.clear();
+    std::cout << "[GlobalTracker::track]: push localTrackers' tracks into tracks_ of GlobalTrackers" 
+    << std::endl;
     for(const auto& tracker : localTrackers_)
     {
       Tracks tr = tracker->tracks();
@@ -110,16 +90,27 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections)
     std::vector<bool> not_associate;
     associate(selected_detections, q, _detections);
     
-    std::cout << "[q dim][after g associate]: (" << q.rows << " x " << q.cols << ") //detections x tracks" << std::endl; 
+    std::cout << "[GlobalTracker::track][q]: " << q << " //detections x tracks" << std::endl; 
     if(q.total() > 0)
     {
       not_associate = analyze_tracks(q, _detections); //ASSIGN ALL THE NOT ASSOCIATED TRACKS
       //HYPOTHESIS
       const Matrices& association_matrices = generate_hypothesis(selected_detections, q);
       
+      std::cout << "[GlobalTracker::track]:[association_matrices]" << std::endl;
+      for (const auto& mat : association_matrices)
+      {
+        std::cout << "(" << mat.rows() << "," << mat.cols() << ")"<< std::endl;
+        std::cout << mat << std::endl;
+      }
+    
+
+
       //COMPUTE JOINT PROBABILITY
       beta_ = joint_probability(association_matrices, selected_detections);
       last_beta_ = beta_.row(beta_.rows() - 1);
+
+      // std::cout << "[GlobalTracker::track][last_beta_]:" << last_beta_ << std::endl;
 	
       //KALMAN PREDICT STEP
       uint i = 0, j = 0;
@@ -165,6 +156,7 @@ void GlobalTracker::delete_tracks()
 
 void GlobalTracker::manage_new_tracks()
 {
+  std::cout << "[GlobalTracker::manage_new_tracks]" << std::endl;
   const uint& prevDetSize = prev_detections_.size();
   const uint& deteSize = not_associated_.size();
   if(prevDetSize == 0)
@@ -275,7 +267,16 @@ void GlobalTracker::manage_new_tracks()
 void GlobalTracker::associate(std::vector< Eigen::Vector2f >& _selected_detections, cv::Mat& _q, 
 			const std::vector< Detection >& _detections)
 {
-  std::cout << "[GlobalTracker::associate]: called" << std::endl;
+  // std::cout << "[GlobalTracker::associate]: [_detections]:";
+  // for(const auto & det : _detections)
+  // {
+  //   std::cout 
+  //   << "(" << det.x() 
+  //   << "," << det.y()
+  //   << ")";
+  // }
+  // std::cout << std::endl;
+
   //Extracting the measurements inside the validation gate for all the tracks
   //Create a q matrix with a width = clutter + number of tracks
   _q = cv::Mat_<int>(cv::Size(tracks_.size() + 1, _detections.size()), int(0));
@@ -313,6 +314,9 @@ void GlobalTracker::associate(std::vector< Eigen::Vector2f >& _selected_detectio
 	_q.at<int>(validationIdx, 0) = 1;
 	_q.at<int>(validationIdx, i) = 1;
 	found = true;
+  std::cout << "[GlobalTracker::associate][found]: detection[" 
+  << j << "] <-> track["
+  << track->getId() << "]" << std::endl;
       }
       ++i;
     }
