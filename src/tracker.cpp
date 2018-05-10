@@ -30,6 +30,7 @@ void Tracker::drawTracks(cv::Mat &_img) const
 Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices,
 						const Vec2f& selected_detections)
 {
+  std::cout << "[Tracker::joint_probability]" << std::endl;
   uint hyp_num = _association_matrices.size();
   Eigen::VectorXf Pr(_association_matrices.size());
   uint validationIdx = _association_matrices.at(0).rows();
@@ -89,6 +90,9 @@ Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices
     }
     
     const float& likelyhood = N / float(std::pow(V, false_alarms));
+
+    std::cout << "[Tracker::joint_probability][likelihood]:" 
+    << likelyhood << std::endl;
        
     if(param_.pd == 1)
     {

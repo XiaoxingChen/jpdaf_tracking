@@ -156,7 +156,10 @@ void GlobalTracker::delete_tracks()
 
 void GlobalTracker::manage_new_tracks()
 {
-  std::cout << "[GlobalTracker::manage_new_tracks]" << std::endl;
+  std::cout << "[GlobalTracker::manage_new_tracks]:" 
+  << prev_detections_.size()  << " detections, "
+  << not_associated_.size() << " notassociated"
+  << std::endl;
   const uint& prevDetSize = prev_detections_.size();
   const uint& deteSize = not_associated_.size();
   if(prevDetSize == 0)
